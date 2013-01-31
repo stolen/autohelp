@@ -5,7 +5,7 @@
 
 parse_transform(AST, _Options) ->
   [File|_] = [FileName || {attribute, _, file, {FileName, _}} <- AST],
-  try edoc:get_doc(File) of
+  try edoc:get_doc(File, [{preprocess, true}]) of
     {Module, #xmlElement{name = module} = DocXML} ->
       add_doc_from_xml(AST, Module, DocXML);
     {_Module, _} ->
