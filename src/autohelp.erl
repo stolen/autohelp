@@ -5,13 +5,22 @@
 
 parse_transform(AST, _Options) ->
   [File|_] = [FileName || {attribute, _, file, {FileName, _}} <- AST],
-  {Module, DocXML} = edoc:get_doc(File),
-  case DocXML of
-    #xmlElement{name = module} ->
+  try edoc:get_doc(File) of
+    {Module, #xmlElement{name = module} = DocXML} ->
       add_doc_from_xml(AST, Module, DocXML);
-    _ ->
-      io:format("~s: cannot retrieve documentation for module ~s~n", [?MODULE, Module])
+    {_Module, _} ->
+      print_error(File),
+      AST
+  catch
+    Class:Message ->
+      io:format("~s: edoc:get_doc crashed with ~w:~w on ~s~n", [?MODULE, Class, Message, File]),
+      print_error(File),
+      AST
   end.
+
+print_error(File) ->
+  io:format("~s WARNING: cannot retrieve documentation from ~s. Run edoc:get_doc(\"~s\") manually to investigate problem~n", [?MODULE, File, File]).
+
 
 add_doc_from_xml(AST, Module, #xmlElement{} = DocXML) ->
   HelpExports = {attribute, 0, export, [{help, 0}, {help, 1}, {help, 2}]},
