@@ -121,5 +121,5 @@ copy_lib_function(SrcLibFunName, SrcArity, NewFunName) ->
   {function, 0, NewFunName, SrcArity, FunBody}.
 
 insert_before_functions(Items, AST) ->
-  {Before, Functions} = lists:splitwith(fun(I) -> element(1, I) /= function end, AST),
+  {Before, Functions} = lists:splitwith(fun(I) -> not lists:member(element(1, I), [function, eof]) end, AST),
   Before ++ Items ++ Functions.
