@@ -3,9 +3,11 @@
 
 -include_lib("xmerl/include/xmerl.hrl").
 
-parse_transform(AST, _Options) ->
+parse_transform(AST, Options) ->
   [File|_] = [FileName || {attribute, _, file, {FileName, _}} <- AST],
-  try edoc:get_doc(File, [{preprocess, true}]) of
+  % Pass include dirs to edoc to make its preprocessor work more like Erlang compiler's one
+  Includes = ["."] ++ [Inc || {i, Inc} <- Options],
+  try edoc:get_doc(File, [{preprocess, true}, {includes, Includes}]) of
     {Module, #xmlElement{name = module} = DocXML} ->
       add_doc_from_xml(AST, Module, DocXML);
     {_Module, _} ->
