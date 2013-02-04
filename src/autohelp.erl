@@ -71,9 +71,12 @@ get_descriptions(#xmlElement{} = E) ->
       {get_text(Brief), get_text(Full)}
   end.
 
-get_text(#xmlElement{content = [#xmlText{value = Text}]}) ->
+% Recursive text extraction
+get_text(#xmlElement{content = Content}) ->
+  [get_text(Item) || Item <- Content];
+get_text(#xmlText{value = Text}) ->
   Text;
-get_text(_) ->
+get_text(_) -> % Unknown node
   "".
 
 
