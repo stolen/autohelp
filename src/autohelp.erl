@@ -14,18 +14,30 @@
 -include_lib("xmerl/include/xmerl.hrl").
 
 parse_transform(AST, Options) ->
+  % Get module name. We will need it for printing warnings
   [Module|_] = [Mod || {attribute, _, module, Mod} <- AST],
-  Exports = lists:flatten([Ex || {attribute, _, export, Ex} <- AST]),
-  Conflicts = [Export || Export = {help, Arity} <- Exports, Arity == 1 orelse Arity == 2 orelse Arity == 3],
-  case Conflicts of
-    [] ->
+  % Find conflicting exports
+  ExportConflicts = [Export || {attribute, _, export, Exports} <- AST,
+                               Export = {help, Arity} <- Exports,
+                               Arity == 1 orelse Arity == 2 orelse Arity == 3],
+  % Find conflicting function definitions
+  DefinitionConflicts = [{Name, Arity} || {function, _, Name, Arity, _} <- AST, Name == help, Arity == 1 orelse Arity == 2 orelse Arity == 3],
+  % Continue to transform if no conflicts. Print warning and no-op otherwise
+  case {ExportConflicts, DefinitionConflicts} of
+    {[], []} ->
       do_parse_transform(Module, AST, Options);
-    _Other ->
-      StrConflicts = [lists:flatten(io_lib:format("~w/~w", [Name, Arity])) || {Name, Arity} <- Conflicts],
-      PrintedConflicts = string:join(StrConflicts, ", "),
-      io:format("~s ~s WARNING: functions ~s are already exported. Disabling autohelp.~n", [Module, ?MODULE, PrintedConflicts]),
+    {[_|_] = Conflicts, _} ->
+      io:format("~s ~s WARNING: function(s) ~s are already exported. Disabling autohelp.~n", [Module, ?MODULE, print_funs(Conflicts)]),
+      AST;
+    {_, Conflicts} ->
+      io:format("~s ~s WARNING: function(s) ~s are already defined. Disabling autohelp.~n", [Module, ?MODULE, print_funs(Conflicts)]),
       AST
   end.
+
+% Utility. Accepts [{Name, Arity}] and returns "Name/Arity, ..."
+print_funs(Funs) ->
+  StrFuns = [lists:flatten(io_lib:format("~w/~w", [Name, Arity])) || {Name, Arity} <- Funs],
+  string:join(StrFuns, ", ").
 
 do_parse_transform(Module, AST, Options) ->
   [File|_] = [FileName || {attribute, _, file, {FileName, _}} <- AST],
