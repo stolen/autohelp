@@ -17,21 +17,23 @@ parse_transform(AST, Options) ->
   [File|_] = [FileName || {attribute, _, file, {FileName, _}} <- AST],
   % Pass include dirs to edoc to make its preprocessor work more like Erlang compiler's one
   Includes = ["."] ++ [Inc || {i, Inc} <- Options],
-  try edoc:get_doc(File, [{preprocess, true}, {includes, Includes}]) of
+  EDocOptions = [{preprocess, true}, {includes, Includes}],
+  try edoc:get_doc(File, EDocOptions) of
     {Module, #xmlElement{name = module} = DocXML} ->
       add_doc_from_xml(AST, Module, DocXML);
     {_Module, _} ->
-      print_error(File),
+      print_error(File, EDocOptions),
       AST
   catch
     Class:Message ->
       io:format("~s: edoc:get_doc crashed with ~w:~w on ~s~n", [?MODULE, Class, Message, File]),
-      print_error(File),
+      print_error(File, EDocOptions),
       AST
   end.
 
-print_error(File) ->
-  io:format("~s WARNING: cannot retrieve documentation from ~s. Run edoc:get_doc(\"~s\") manually to investigate problem~n", [?MODULE, File, File]).
+print_error(File, Options) ->
+  io:format("~s WARNING: cannot retrieve documentation from ~s.
+            Run edoc:get_doc(\"~s\", ~240p) manually to investigate problem~n", [?MODULE, File, File, Options]).
 
 
 add_doc_from_xml(AST, Module, #xmlElement{} = DocXML) ->
