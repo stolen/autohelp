@@ -19,9 +19,9 @@ parse_transform(AST, Options) ->
   % Find conflicting exports
   ExportConflicts = [Export || {attribute, _, export, Exports} <- AST,
                                Export = {help, Arity} <- Exports,
-                               Arity == 1 orelse Arity == 2 orelse Arity == 3],
+                               lists:member(Arity, [0, 1, 2])],
   % Find conflicting function definitions
-  DefinitionConflicts = [{Name, Arity} || {function, _, Name, Arity, _} <- AST, Name == help, Arity == 1 orelse Arity == 2 orelse Arity == 3],
+  DefinitionConflicts = [{Name, Arity} || {function, _, Name, Arity, _} <- AST, Name == help, lists:member(Arity, [0, 1, 2])],
   % Continue to transform if no conflicts. Print warning and no-op otherwise
   case {ExportConflicts, DefinitionConflicts} of
     {[], []} ->
