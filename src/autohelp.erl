@@ -1,4 +1,14 @@
+%% Copyright (c) 2012-2013 Danil Zagoskin
+%% See MIT-LICENSE for licensing information.
+
+%% @doc autohelp: parse_transform to automatically
+%% add self-description functions to your Erlang modules.
+%%
+%% Just compile your code with `{parse_transform, autohelp}` option
+%% to make its EDoc notations available through help/{1,2,3} exports.
+
 -module(autohelp).
+-author({"Danil Zagoskin", 'z@gosk.in'}).
 -export([parse_transform/2]).
 
 -include_lib("xmerl/include/xmerl.hrl").

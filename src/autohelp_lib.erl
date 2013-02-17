@@ -1,4 +1,13 @@
+%% Copyright (c) 2012-2013 Danil Zagoskin
+%% See MIT-LICENSE for licensing information.
+
+%% @doc autohelp library module.
+%% This module is compiled with save_debug option
+%% to allow autohelp insert pre-compiled (known good)
+%% functions into module being transformed.
+
 -module(autohelp_lib).
+-author({"Danil Zagoskin", 'z@gosk.in'}).
 -export([pad_text_left/2, help/1, help/2]).
 
 pad_text_left(Text, PadWidth) ->
