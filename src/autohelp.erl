@@ -14,6 +14,20 @@
 -include_lib("xmerl/include/xmerl.hrl").
 
 parse_transform(AST, Options) ->
+  [Module|_] = [Mod || {attribute, _, module, Mod} <- AST],
+  Exports = lists:flatten([Ex || {attribute, _, export, Ex} <- AST]),
+  Conflicts = [Export || Export = {help, Arity} <- Exports, Arity == 1 orelse Arity == 2 orelse Arity == 3],
+  case Conflicts of
+    [] ->
+      do_parse_transform(Module, AST, Options);
+    _Other ->
+      StrConflicts = [lists:flatten(io_lib:format("~w/~w", [Name, Arity])) || {Name, Arity} <- Conflicts],
+      PrintedConflicts = string:join(StrConflicts, ", "),
+      io:format("~s ~s WARNING: functions ~s are already exported. Disabling autohelp.~n", [Module, ?MODULE, PrintedConflicts]),
+      AST
+  end.
+
+do_parse_transform(Module, AST, Options) ->
   [File|_] = [FileName || {attribute, _, file, {FileName, _}} <- AST],
   % Pass include dirs to edoc to make its preprocessor work more like Erlang compiler's one
   Includes = ["."] ++ [Inc || {i, Inc} <- Options],
@@ -22,18 +36,18 @@ parse_transform(AST, Options) ->
     {Module, #xmlElement{name = module} = DocXML} ->
       add_doc_from_xml(AST, Module, DocXML);
     {_Module, _} ->
-      print_error(File, EDocOptions),
+      print_error(Module, File, EDocOptions),
       AST
   catch
     Class:Message ->
-      io:format("~s: edoc:get_doc crashed with ~w:~w on ~s~n", [?MODULE, Class, Message, File]),
-      print_error(File, EDocOptions),
+      io:format("~s ~s: edoc:get_doc crashed with ~w:~w on ~s~n", [Module, ?MODULE, Class, Message, File]),
+      print_error(Module, File, EDocOptions),
       AST
   end.
 
-print_error(File, Options) ->
-  io:format("~s WARNING: cannot retrieve documentation from ~s.
-            Run edoc:get_doc(\"~s\", ~240p) manually to investigate problem~n", [?MODULE, File, File, Options]).
+print_error(Module, File, Options) ->
+  io:format("~s ~s WARNING: cannot retrieve documentation from ~s.
+            Run edoc:get_doc(\"~s\", ~240p) manually to investigate problem~n", [Module, ?MODULE, File, File, Options]).
 
 
 add_doc_from_xml(AST, Module, #xmlElement{} = DocXML) ->
