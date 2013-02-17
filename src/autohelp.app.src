@@ -1,5 +1,5 @@
 {application, autohelp, [
     {description, "Erlang parse_transform for adding in-module documentation automatically"},
-    {vsn, "0.1"},
+    {vsn, "0.2"},
     {applications, [kernel, stdlib]}
   ]}.
