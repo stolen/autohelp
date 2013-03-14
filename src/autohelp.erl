@@ -140,7 +140,7 @@ fun_desc_from_xml(#xmlElement{} = FunXML) ->
 make_module_help(Module, ModFullDesc, FunDescriptions) ->
   PaddedDesc = autohelp_lib:pad_text_left(ModFullDesc, 3),
   FunHeaders = [["\n     ->  ", Header] || {_Fun, _Ar, Header, _bDesc, _fDesc} <- FunDescriptions],
-  HelpFormat = "Module ~s~n----------------------------------~n   ~s~n----------------------------------~s~n",
+  HelpFormat = "Module ~s~n----------------------------------~n   ~ts~n----------------------------------~s~n",
   {function, 0, help, 0,
     [{clause, 0, [], [],
         [{call, 0, {remote, 0, {atom, 0, io}, {atom, 0, format}}, [
